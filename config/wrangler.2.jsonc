@@ -1,0 +1,36 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mini-ai-agent",
+	"main": "../src/index.2.ts",
+	"compatibility_date": "2025-10-03",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": false,
+	"routes": [
+    	{
+      		"pattern": "mini-ai-agent.cloudflareresearch.com",
+      		"custom_domain": true
+    	}
+	],
+	"observability": {
+		"enabled": true
+	},
+	"ai": {
+		"binding": "AI"
+	},
+	"assets": {
+		"directory": "../assets",
+		"binding": "ASSETS"
+	},
+	"browser": {
+		"binding": "BROWSER"
+	},
+	"alias": {
+		"playwright": "@cloudflare/playwright",
+	}
+}

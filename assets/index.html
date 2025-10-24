@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<title>Cloudflare Research | Pizza Menu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍕</text></svg>">
+
+<link href="https://research.cloudflare.com/css/standalone1.css" rel="stylesheet" type="text/css">
+
+<style type="text/css">
+  .header { border-bottom: 0; z-index: 100 }
+  main { padding-right: 2rem; padding-bottom: 2rem }
+  .q {
+  	text-decoration: none;  	
+    border: 1px solid var(--indigo-8);
+    background-color: var(--indigo-9);
+    padding: 0 0.2rem 0 0.2rem;
+    color: black;
+  }
+  .q:hover {
+    cursor: help;
+  	text-decoration: none;
+  	border: 1px solid var(--green-8);
+    background-color: var(--green-9);
+  }
+  .q:visited {
+    color: black;
+  }
+  .current {
+  	display: table;
+  	background-color: var(--orange-8);
+  	border: 1px solid var(--orange-7);
+  	margin-bottom: 0.2rem;
+  }
+  .current .num {
+    margin-left: -1rem; 
+    padding: 1rem 0.8rem 1rem 0.8rem; 
+    background-color:var(--orange-7); 
+    margin-right: 0.8rem;
+  }
+  div.action {
+    position: relative;
+    border-radius: 1rem;
+    background-color: var(--violet-9);
+  	border: 1px solid var(--violet-7);
+  	padding: 0.5rem 1rem 0.5rem 1.5rem;
+  	margin-bottom: 0.2rem;
+    margin-top: -1rem;
+    margin-left: 1.7rem;
+  }
+  div.error {
+    position: relative;
+    border-radius: 1rem;
+    color: white;
+    background-color: var(--indigo-2);
+  	border: 1px solid var(--indigo-1);
+  	padding: 0.5rem 1rem 0.5rem 1.5rem;
+  	margin-bottom: 0.2rem;
+    margin-top: -1rem;
+    margin-left: 1.7rem;  	
+  }
+  div.error a {
+  	color: white;
+  }
+  .box {
+  	display: table;
+  	background-color: white;
+  	border: 1px solid var(--orange-8);
+  	margin-bottom: 0.2rem;
+  }
+  .box .num {
+    margin-left: -1rem; 
+    padding: 1rem 0.8rem 1rem 0.8rem; 
+    background-color:var(--orange-8); 
+    margin-right: 0.8rem;
+  }
+  .snt {
+    margin-top: 1rem;
+    margin-right: -1rem;
+  	float: right; 
+  	background-color: green; 
+  	color: white; 
+  	width: 1.9rem;
+  	height: 3rem; 
+  	display: flex; 
+  	justify-content: center; 
+  	flex-direction: column; 
+  	border-top: 1px solid var(--orange-8);
+  	border-bottom: 1px solid var(--orange-8);
+  }
+  .hidden {
+  	display: none;
+  }
+  .num.green {
+  	background-color: green;
+  	color: white;
+  }
+  
+  /* Pizza Menu Styles */
+  .pizza-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .pizza-item {
+    position: relative;
+  }
+  
+  body > input[type="radio"] {
+    position: absolute;
+    left: -9999px;
+    visibility: hidden;
+    opacity: 0;
+  }
+  
+  .pizza-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    border: 2px solid var(--orange-8);
+    border-radius: 1rem;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .pizza-card:hover {
+    background-color: var(--orange-9);
+    border-color: var(--orange-7);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  #margherita:checked ~ .wrapper main .pizza-menu .pizza-item:nth-child(1) .pizza-card,
+  #pepperoni:checked ~ .wrapper main .pizza-menu .pizza-item:nth-child(2) .pizza-card,
+  #veggie:checked ~ .wrapper main .pizza-menu .pizza-item:nth-child(3) .pizza-card,
+  #meat:checked ~ .wrapper main .pizza-menu .pizza-item:nth-child(4) .pizza-card,
+  #hawaiian:checked ~ .wrapper main .pizza-menu .pizza-item:nth-child(5) .pizza-card {
+    background-color: var(--green-9);
+    border-color: var(--green-7);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+  }
+  
+  .pizza-emoji {
+    font-size: 4rem;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+  }
+  
+  .pizza-info {
+    flex: 1;
+  }
+  
+  .pizza-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    color: var(--indigo-2);
+  }
+  
+  .taste {
+    margin: 0 0 0.5rem 0;
+    font-weight: bold;
+    color: var(--violet-2);
+    font-size: 1.1rem;
+  }
+  
+  .ingredients {
+    margin: 0 0 0.5rem 0;
+    color: #666;
+    font-style: italic;
+    line-height: 1.4;
+  }
+  
+  .price {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--orange-2);
+  }
+  
+  .order-summary {
+    background-color: var(--indigo-9);
+    border: 2px solid var(--indigo-7);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .total-section h3 {
+    margin-top: 0;
+    color: var(--indigo-2);
+  }
+  
+  .selected-pizza {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--indigo-7);
+  }
+  
+  .selected-name {
+    color: #666;
+  }
+  
+  .selected-price {
+    font-weight: bold;
+    color: var(--orange-2);
+  }
+  
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+  }
+  
+  .total-amount {
+    color: var(--green-2);
+  }
+  
+  .pay-button {
+    width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .pay-button:enabled {
+    background-color: var(--green-7);
+    color: white;
+  }
+  
+  .pay-button:enabled:hover {
+    background-color: var(--green-6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .pay-button:disabled {
+    background-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+  }
+  
+  /* CSS-only interactive functionality */
+  .pizza-details {
+    display: none;
+  }
+  
+  #margherita:checked ~ .wrapper description .margherita-details,
+  #pepperoni:checked ~ .wrapper description .pepperoni-details,
+  #veggie:checked ~ .wrapper description .veggie-details,
+  #meat:checked ~ .wrapper description .meat-details,
+  #hawaiian:checked ~ .wrapper description .hawaiian-details {
+    display: block;
+  }
+  
+  .default-summary {
+    display: block;
+  }
+  
+  body > input[name="pizza"]:checked ~ .wrapper description .default-summary {
+    display: none;
+  }
+  
+  body > input[name="pizza"]:checked ~ .wrapper description .pay-button {
+    background-color: var(--green-7);
+    color: white;
+    cursor: pointer;
+  }
+  
+  body > input[name="pizza"]:checked ~ .wrapper description .pay-button:hover {
+    background-color: var(--green-6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .pizza-card {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .pizza-emoji {
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+
+</head>
+
+<body>
+
+<input type="radio" name="pizza" id="margherita" value="12.99">
+<input type="radio" name="pizza" id="pepperoni" value="14.99">
+<input type="radio" name="pizza" id="veggie" value="13.99">
+<input type="radio" name="pizza" id="meat" value="16.99">
+<input type="radio" name="pizza" id="hawaiian" value="15.49">
+
+<div class="wrapper" style="position: relative">
+<header class="header">
+  <a href="https://research.cloudflare.com"><img class="logo" src="https://research.cloudflare.com/img/logo.svg" alt="Cloudflare Research logo"></a>
+  <a href="/" style="text-decoration: none"><span style="font-size: 1.4rem">Privacy Pass</span></a><!-- &nbsp;<small>"Privacy Pass with Private Access Tokens"</small> -->
+  <span class="flare" style="background-color: var(--violet-2); color: white;">DEMO</span>
+  <div style="position: absolute; display: block; border: 0; padding: 0; margin: 0; width: 100%; height: 0.2rem; top: 3.6rem; background: linear-gradient(70deg, var(--green-8) 30%, rgba(0,0,0,0) 30%), linear-gradient(30deg, var(--indigo-8) 60%, var(--orange-8) 60%);">&nbsp;</div>
+</header>
+
+<main>
+  <h2>Select your favorite pizza and enjoy!</h2>
+  <p>They'll be delivered to a Cloudflare office near you.</p>
+
+  <form class="pizza-form">
+    
+    <div class="pizza-menu">
+      <div class="pizza-item">
+        <label for="margherita" class="pizza-card">
+          <div class="pizza-emoji">🍕</div>
+          <div class="pizza-info">
+            <h3>Margherita Classic</h3>
+            <p class="taste">🌟 Fresh & Traditional</p>
+            <p class="ingredients">Fresh mozzarella, San Marzano tomatoes, fresh basil, olive oil</p>
+            <p class="price">$12.99</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="pizza-item">
+        <label for="pepperoni" class="pizza-card">
+          <div class="pizza-emoji">🍕</div>
+          <div class="pizza-info">
+            <h3>Pepperoni Supreme</h3>
+            <p class="taste">🔥 Spicy & Savory</p>
+            <p class="ingredients">Pepperoni, mozzarella cheese, tomato sauce, oregano</p>
+            <p class="price">$14.99</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="pizza-item">
+        <label for="veggie" class="pizza-card">
+          <div class="pizza-emoji">🥬</div>
+          <div class="pizza-info">
+            <h3>Veggie Garden</h3>
+            <p class="taste">🌿 Fresh & Healthy</p>
+            <p class="ingredients">Bell peppers, mushrooms, onions, olives, tomatoes, mozzarella</p>
+            <p class="price">$13.99</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="pizza-item">
+        <label for="meat" class="pizza-card">
+          <div class="pizza-emoji">🥓</div>
+          <div class="pizza-info">
+            <h3>Meat Lovers</h3>
+            <p class="taste">🥩 Rich & Hearty</p>
+            <p class="ingredients">Pepperoni, sausage, bacon, ham, ground beef, mozzarella</p>
+            <p class="price">$16.99</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="pizza-item">
+        <label for="hawaiian" class="pizza-card">
+          <div class="pizza-emoji">🍍</div>
+          <div class="pizza-info">
+            <h3>Hawaiian Paradise</h3>
+            <p class="taste">🌺 Sweet & Tropical</p>
+            <p class="ingredients">Ham, pineapple chunks, mozzarella cheese, tomato sauce</p>
+            <p class="price">$15.49</p>
+          </div>
+        </label>
+      </div>
+    </div>
+  </form>
+</main>
+
+<description>
+  <div class="order-summary">
+    <div class="total-section">
+      <h3>Order Summary</h3>
+      
+      <div class="default-summary">
+        <div class="selected-pizza">
+          <span class="selected-name">No pizza selected</span>
+          <span class="selected-price">$0.00</span>
+        </div>
+        <div class="total-line">
+          <strong>Total: <span class="total-amount">$0.00</span></strong>
+        </div>
+      </div>
+      
+      <div class="pizza-details margherita-details">
+        <div class="selected-pizza">
+          <span class="selected-name">Margherita Classic</span>
+          <span class="selected-price">$12.99</span>
+        </div>
+        <div class="total-line">
+          <strong>Total: <span class="total-amount">$12.99</span></strong>
+        </div>
+      </div>
+      
+      <div class="pizza-details pepperoni-details">
+        <div class="selected-pizza">
+          <span class="selected-name">Pepperoni Supreme</span>
+          <span class="selected-price">$14.99</span>
+        </div>
+        <div class="total-line">
+          <strong>Total: <span class="total-amount">$14.99</span></strong>
+        </div>
+      </div>
+      
+      <div class="pizza-details veggie-details">
+        <div class="selected-pizza">
+          <span class="selected-name">Veggie Garden</span>
+          <span class="selected-price">$13.99</span>
+        </div>
+        <div class="total-line">
+          <strong>Total: <span class="total-amount">$13.99</span></strong>
+        </div>
+      </div>
+      
+      <div class="pizza-details meat-details">
+        <div class="selected-pizza">
+          <span class="selected-name">Meat Lovers</span>
+          <span class="selected-price">$16.99</span>
+        </div>
+        <div class="total-line">
+          <strong>Total: <span class="total-amount">$16.99</span></strong>
+        </div>
+      </div>
+      
+      <div class="pizza-details hawaiian-details">
+        <div class="selected-pizza">
+          <span class="selected-name">Hawaiian Paradise</span>
+          <span class="selected-price">$15.49</span>
+        </div>
+        <div class="total-line">
+          <strong>Total: <span class="total-amount">$15.49</span></strong>
+        </div>
+      </div>
+      
+      <button type="button" class="pay-button" disabled>Pay Now 💳</button>
+    </div>
+  </div>
+</description>
+
+
+<footer class="footer" style="z-index: 2; background-color: white">
+  <a class="plain" href="https://www.cloudflare.com"> Copyright &copy; <span id="year">2025</span>&nbsp;Cloudflare, Inc.&nbsp;</a>
+  <script>document.getElementById( 'year' ).innerHTML = ( new Date().getFullYear() )</script>
+  <a href="https://research.cloudflare.com/contact/">Contact us</a>
+  <a href="https://www.cloudflare.com/privacypolicy/">Privacy policy</a>
+  <a href="https://www.cloudflare.com/website-terms/">Terms of service</a>
+</footer>
+</div>
+
+</body>
+
+</html>
