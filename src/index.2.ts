@@ -30,6 +30,7 @@ export default {
 		const { extraction } = await page.extract(
 			"what are the pizza available on the menu?"
 		);
+		await stagehand.close();
 		return new Response(extraction);
 	},
 } satisfies ExportedHandler<Env>;

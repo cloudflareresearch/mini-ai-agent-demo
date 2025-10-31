@@ -9,7 +9,7 @@ type WorkersAIOptions = AiOptions & {
   logger?: (line: LogLine) => void;
 };
 
-const modelId = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const modelId = "@cf/meta/llama-3.1-8b-instruct-fast";
 
 // Basic implementation of LLMClient for Workers AI.
 // This uses @cf/meta/llama-3.3-70b-instruct-fp8-fast model. If you want to
